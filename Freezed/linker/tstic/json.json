@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "country": "中国",
+  "countryCode": "CN",
+  "region": "GD",
+  "regionName": "广东",
+  "city": "深圳",
+  "zip": "",
+  "lat": 22.5431,
+  "lon": 114.058,
+  "timezone": "Asia/Shanghai",
+  "isp": "China Mobile communications corporation",
+  "org": "China Mobile",
+  "as": "AS9808 China Mobile Communications Group Co., Ltd.",
+  "query": "117.163.194.195"
+}
