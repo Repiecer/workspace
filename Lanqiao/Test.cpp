@@ -1,15 +1,12 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <list>
-
+#include<bits/stdc++.h>
+#include<vector>
 using namespace std;
 
-int main(){
-    list<int> myList;
-    myList.push_back(10);
-    myList.push_back(20);
-    myList.push_back(30);
-    cout << myList.back();
-    return 0;
-}
+
+int main()
+{
+	vector<int> arr1 = {1, 2};
+	vector<int> arr2 = {1, 2};
+	cout << arr1+arr2;
+	return 0;
+} 
