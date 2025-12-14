@@ -3,7 +3,7 @@ using namespace std;
 
 
 
-int main(int argc, char const *argv[])
+int main()
 {
 	int num[9];
 	for (int i = 0; i < 9; ++i)

@@ -8,5 +8,6 @@ int main(int argc, char const *argv[])
 	cin.tie(nullptr);
 	cout.tie(nullptr);
 	
+	
 	return 0;
 }
