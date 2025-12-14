@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D交互式照片立方体 - 本地图片版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #container {
+            flex: 1;
+            position: relative;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+        }
+
+        .instructions {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .instruction-item {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+        }
+
+        .key {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 0 5px;
+            font-family: monospace;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .level-indicator {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        #file-input-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .file-input-label {
+            display: block;
+            background: rgba(74, 111, 165, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .file-input-label:hover {
+            background: rgba(74, 111, 165, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .file-input-label input {
+            display: none;
+        }
+
+        #file-count {
+            font-size: 12px;
+            opacity: 0.8;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        #warning {
+            background: rgba(255, 100, 100, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            display: none;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            display: none;
+            min-width: 300px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4a6fa5;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+        }
+
+        #hint:hover {
+            opacity: 1;
+        }
+
+        .photo-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+            display: none;
+        }
+
+        .photo-info h3 {
+            margin-bottom: 10px;
+            color: #4a6fa5;
+        }
+
+        .photo-info p {
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="ui">
+        <div class="instructions">
+            <div class="instruction-item">📁 <strong>第一步</strong>: 选择6张以上图片</div>
+            <div class="instruction-item">🖱️ <strong>左键拖拽</strong>: 旋转立方体</div>
+            <div class="instruction-item">🖱️ <strong>滚轮</strong>: 缩放视图</div>
+            <div class="instruction-item">👆 <strong>鼠标悬停</strong>: 放大查看照片</div>
+            <div class="instruction-item">🖱️ <strong>左键点击</strong>: 展开当前立方体</div>
+            <div class="instruction-item">🖱️ <strong>右键点击</strong>: 恢复立方体</div>
+            <div class="instruction-item">⌨️ <strong>ESC键</strong>: 重置所有层级</div>
+        </div>
+        
+        <div class="level-indicator">
+            当前层级: <span id="level">1</span>/<span id="totalLevels">5</span>
+        </div>
+        
+        <div id="file-input-container">
+            <label class="file-input-label">
+                选择图片文件夹 (至少6张)
+                <input type="file" id="file-input" multiple accept="image/*" webkitdirectory directory>
+            </label>
+            <div id="file-count">已选择: <span id="selected-count">0</span> 张图片</div>
+            <div id="warning">⚠️ 请选择至少6张图片以创建立方体</div>
+        </div>
+    </div>
+    
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loading-text">正在准备3D场景...</div>
+        <div id="progress" style="margin-top: 10px; font-size: 12px;"></div>
+    </div>
+    
+    <div id="hint">请先选择包含图片的文件夹（至少6张图片）</div>
+    
+    <div class="photo-info" id="photo-info">
+        <h3>照片信息</h3>
+        <p><strong>名称:</strong> <span id="photo-name">-</span></p>
+        <p><strong>尺寸:</strong> <span id="photo-size">-</span></p>
+        <p><strong>类型:</strong> <span id="photo-type">-</span></p>
+        <p><strong>层级:</strong> <span id="photo-level">-</span></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    
+    <script>
+        // 配置参数
+        const CONFIG = {
+            cubeSize: 2.5,
+            animationDuration: 1.2,
+            hoverScale: 1.8,
+            spacing: 3.5,
+            maxLevel: 5
+        };
+
+        // 全局变量
+        let scene, camera, renderer, raycaster;
+        let cubes = [];
+        let currentCube = null;
+        let currentLevel = 1;
+        let isAnimating = false;
+        let mouse = new THREE.Vector2();
+        let hoveredFace = null;
+        let originalPositions = new Map();
+        let selectedImages = [];
+        let imageQueue = [];
+        let loadedTextures = [];
+
+        // 初始化场景
+        function init() {
+            showLoading(true, "正在初始化3D场景...");
+            
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 8;
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // 添加光线
+            addLights();
+            
+            // 初始化光线投射器
+            raycaster = new THREE.Raycaster();
+            
+            // 添加事件监听器
+            setupEventListeners();
+            
+            // 初始提示
+            document.getElementById('hint').textContent = "请选择包含图片的文件夹（至少6张图片）";
+        }
+        
+        // 显示/隐藏加载界面
+        function showLoading(show, text = "正在加载...") {
+            const loadingEl = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = text;
+            loadingEl.style.display = show ? 'block' : 'none';
+        }
+        
+        // 更新加载进度
+        function updateProgress(current, total) {
+            const progressEl = document.getElementById('progress');
+            progressEl.textContent = `加载进度: ${current}/${total} (${Math.round(current/total*100)}%)`;
+        }
+        
+        // 添加光线
+        function addLights() {
+            // 环境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            // 方向光
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 补光
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            fillLight.position.set(-5, -5, -5);
+            scene.add(fillLight);
+            
+            // 点光源
+            const pointLight = new THREE.PointLight(0x4a6fa5, 0.5, 100);
+            pointLight.position.set(0, 0, 10);
+            scene.add(pointLight);
+        }
+        
+        // 处理文件选择
+        async function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            
+            if (imageFiles.length < 6) {
+                document.getElementById('warning').style.display = 'block';
+                document.getElementById('hint').textContent = "需要至少6张图片，请重新选择";
+                return;
+            }
+            
+            document.getElementById('warning').style.display = 'none';
+            document.getElementById('selected-count').textContent = imageFiles.length;
+            document.getElementById('hint').textContent = "正在加载图片...";
+            
+            selectedImages = imageFiles;
+            
+            // 显示加载界面
+            showLoading(true, "正在加载图片...");
+            
+            // 加载所有图片为纹理
+            await loadAllTextures(imageFiles);
+            
+            // 创建立方体
+            createInitialCube();
+            
+            showLoading(false);
+            document.getElementById('hint').textContent = "悬停在照片上查看细节，点击探索更多层级";
+        }
+        
+        // 加载所有纹理
+        async function loadAllTextures(files) {
+            loadedTextures = [];
+            const loader = new THREE.TextureLoader();
+            
+            for (let i = 0; i < files.length; i++) {
+                updateProgress(i + 1, files.length);
+                
+                const file = files[i];
+                const texture = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const texture = loader.load(e.target.result, resolve);
+                        texture.userData = {
+                            name: file.name,
+                            size: formatFileSize(file.size),
+                            type: file.type,
+                            file: file
+                        };
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                
+                loadedTextures.push(texture);
+                
+                // 添加延迟以防止UI阻塞
+                if (i % 3 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 创建初始立方体
+        function createInitialCube() {
+            // 清除现有场景
+            clearScene();
+            
+            // 从加载的纹理中取前6个
+            const textures = loadedTextures.slice(0, 6);
+            
+            // 创建立方体
+            const cube = createCube(textures, 0, 0, 0, true);
+            
+            // 开始动画循环
+            if (!animate) {
+                animate();
+            }
+        }
+        
+        // 清除场景
+        function clearScene() {
+            cubes.forEach(cube => {
+                if (cube.userData.group) {
+                    scene.remove(cube.userData.group);
+                }
+            });
+            cubes = [];
+            currentCube = null;
+            currentLevel = 1;
+            updateLevelIndicator();
+        }
+        
+        // 创建立方体
+        function createCube(textures, x, y, z, isRoot = false) {
+            const cubeGroup = new THREE.Group();
+            cubeGroup.position.set(x, y, z);
+            
+            // 创建立方体几何体
+            const geometry = new THREE.BoxGeometry(CONFIG.cubeSize, CONFIG.cubeSize, CONFIG.cubeSize);
+            
+            // 创建六个面的材质
+            const materials = textures.map((texture, index) => {
+                const material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    roughness: 0.3,
+                    metalness: 0.1,
+                    name: `face_${index}`
+                });
+                material.userData = texture.userData;
+                return material;
+            });
+            
+            // 创建网格
+            const cube = new THREE.Mesh(geometry, materials);
+            cube.cubeData = {
+                level: currentLevel,
+                isExpanded: false,
+                isRoot: isRoot,
+                faces: []
+            };
+            
+            // 存储每个面的信息
+            for (let i = 0; i < 6; i++) {
+                cube.cubeData.faces.push({
+                    index: i,
+                    originalMaterial: materials[i],
+                    hovered: false
+                });
+            }
+            
+            cubeGroup.add(cube);
+            scene.add(cubeGroup);
+            
+            // 存储立方体引用
+            cube.userData.group = cubeGroup;
+            cube.userData.isCube = true;
+            cubes.push(cube);
+            
+            if (isRoot) {
+                currentCube = cube;
+            }
+            
+            // 添加淡入动画
+            cubeGroup.scale.set(0.1, 0.1, 0.1);
+            gsap.to(cubeGroup.scale, {
+                x: 1,
+                y: 1,
+                z: 1,
+                duration: CONFIG.animationDuration * 0.8,
+                ease: "elastic.out(1, 0.5)"
+            });
+            
+            updateLevelIndicator();
+            
+            return cube;
+        }
+        
+        // 展开立方体
+        async function expandCube(cube) {
+            if (isAnimating || cube.cubeData.isExpanded || currentLevel >= CONFIG.maxLevel) return;
+            
+            isAnimating = true;
+            cube.cubeData.isExpanded = true;
+            
+            const group = cube.userData.group;
+            const size = CONFIG.cubeSize;
+            const spacing = CONFIG.spacing;
+            
+            // 存储原始位置
+            originalPositions.set(cube, {
+                position: cube.position.clone(),
+                rotation: cube.rotation.clone()
+            });
+            
+            // 创建六个面并展开
+            const faces = [];
+            const facePositions = [
+                { pos: [0, 0, spacing], rot: [0, 0, 0] },
+                { pos: [0, 0, -spacing], rot: [0, Math.PI, 0] },
+                { pos: [0, spacing, 0], rot: [-Math.PI/2, 0, 0] },
+                { pos: [0, -spacing, 0], rot: [Math.PI/2, 0, 0] },
+                { pos: [spacing, 0, 0], rot: [0, -Math.PI/2, 0] },
+                { pos: [-spacing, 0, 0], rot: [0, Math.PI/2, 0] }
+            ];
+            
+            // 隐藏原始立方体
+            gsap.to(cube.material, {
+                opacity: 0,
+                duration: CONFIG.animationDuration * 0.3,
+                ease: "power2.out",
+                onComplete: () => {
+                    cube.visible = false;
+                }
+            });
+            
+            // 为每个面创建独立的面板
+            for (let i = 0; i < 6; i++) {
+                const faceGeometry = new THREE.PlaneGeometry(size, size);
+                const material = cube.material[i].clone();
+                material.side = THREE.DoubleSide;
+                material.transparent = true;
+                material.opacity = 0;
+                
+                const face = new THREE.Mesh(faceGeometry, material);
+                face.position.copy(cube.position);
+                face.rotation.copy(cube.rotation);
+                face.scale.set(0.1, 0.1, 0.1);
+                
+                face.userData.isFace = true;
+                face.userData.parentCube = cube;
+                face.userData.faceIndex = i;
+                face.userData.materialData = material.userData;
+                
+                scene.add(face);
+                faces.push(face);
+                
+                // 平滑动画展开
+                const targetPos = new THREE.Vector3(
+                    cube.position.x + facePositions[i].pos[0],
+                    cube.position.y + facePositions[i].pos[1],
+                    cube.position.z + facePositions[i].pos[2]
+                );
+                
+                const targetRot = new THREE.Euler(
+                    cube.rotation.x + facePositions[i].rot[0],
+                    cube.rotation.y + facePositions[i].rot[1],
+                    cube.rotation.z + facePositions[i].rot[2]
+                );
+                
+                gsap.to(face.position, {
+                    x: targetPos.x,
+                    y: targetPos.y,
+                    z: targetPos.z,
+                    duration: CONFIG.animationDuration,
+                    ease: "back.out(1.7)",
+                    delay: i * 0.05
+                });
+                
+                gsap.to(face.rotation, {
+                    x: targetRot.x,
+                    y: targetRot.y,
+                    z: targetRot.z,
+                    duration: CONFIG.animationDuration,
+                    ease: "back.out(1.7)",
+                    delay: i * 0.05
+                });
+                
+                gsap.to(face.scale, {
+                    x: 1,
+                    y: 1,
+                    z: 1,
+                    duration: CONFIG.animationDuration * 0.6,
+                    ease: "back.out(1.7)",
+                    delay: i * 0.05
+                });
+                
+                gsap.to(material, {
+                    opacity: 1,
+                    duration: CONFIG.animationDuration * 0.5,
+                    delay: CONFIG.animationDuration * 0.3 + i * 0.05,
+                    ease: "power2.out"
+                });
+            }
+            
+            // 创建新的内部立方体
+            setTimeout(async () => {
+                currentLevel++;
+                
+                // 循环使用纹理，确保有足够的纹理
+                let textures = [];
+                if (loadedTextures.length >= 6) {
+                    const startIdx = ((currentLevel - 1) * 6) % loadedTextures.length;
+                    for (let i = 0; i < 6; i++) {
+                        textures.push(loadedTextures[(startIdx + i) % loadedTextures.length]);
+                    }
+                } else {
+                    // 如果纹理不足，复制现有纹理
+                    textures = loadedTextures.slice(0, 6);
+                }
+                
+                const innerCube = createCube(textures, 0, 0, 0);
+                innerCube.visible = false;
+                
+                innerCube.scale.set(0.1, 0.1, 0.1);
+                innerCube.visible = true;
+                
+                gsap.to(innerCube.scale, {
+                    x: 1,
+                    y: 1,
+                    z: 1,
+                    duration: CONFIG.animationDuration * 0.8,
+                    ease: "elastic.out(1, 0.5)",
+                    delay: 0.3
+                });
+                
+                currentCube = innerCube;
+                isAnimating = false;
+                cube.userData.expandedFaces = faces;
+            }, CONFIG.animationDuration * 1000);
+        }
+        
+        // 恢复立方体
+        function restoreCube(cube) {
+            if (isAnimating || !cube.cubeData.isExpanded) return;
+            
+            isAnimating = true;
+            currentLevel--;
+            
+            const faces = cube.userData.expandedFaces || [];
+            const originalPos = originalPositions.get(cube);
+            
+            // 隐藏当前内部立方体
+            if (currentCube && currentCube !== cube) {
+                gsap.to(currentCube.scale, {
+                    x: 0.1,
+                    y: 0.1,
+                    z: 0.1,
+                    duration: CONFIG.animationDuration * 0.6,
+                    ease: "back.in(1.7)",
+                    onComplete: () => {
+                        currentCube.visible = false;
+                    }
+                });
+            }
+            
+            // 恢复六个面
+            faces.forEach((face, i) => {
+                if (face) {
+                    gsap.to(face.position, {
+                        x: cube.position.x,
+                        y: cube.position.y,
+                        z: cube.position.z,
+                        duration: CONFIG.animationDuration,
+                        ease: "back.in(1.7)",
+                        delay: i * 0.05
+                    });
+                    
+                    gsap.to(face.rotation, {
+                        x: cube.rotation.x,
+                        y: cube.rotation.y,
+                        z: cube.rotation.z,
+                        duration: CONFIG.animationDuration,
+                        ease: "back.in(1.7)",
+                        delay: i * 0.05
+                    });
+                    
+                    gsap.to(face.scale, {
+                        x: 0.1,
+                        y: 0.1,
+                        z: 0.1,
+                        duration: CONFIG.animationDuration * 0.6,
+                        ease: "back.in(1.7)",
+                        delay: i * 0.05,
+                        onComplete: () => {
+                            if (i === faces.length - 1) {
+                                setTimeout(() => {
+                                    // 移除面
+                                    faces.forEach(f => {
+                                        if (f && f.parent) {
+                                            scene.remove(f);
+                                        }
+                                    });
+                                    
+                                    // 显示原始立方体
+                                    cube.visible = true;
+                                    gsap.to(cube.material, {
+                                        opacity: 1,
+                                        duration: CONFIG.animationDuration * 0.5,
+                                        ease: "power2.out"
+                                    });
+                                    
+                                    cube.cubeData.isExpanded = false;
+                                    currentCube = cube;
+                                    isAnimating = false;
+                                }, 100);
+                            }
+                        }
+                    });
+                    
+                    gsap.to(face.material, {
+                        opacity: 0,
+                        duration: CONFIG.animationDuration * 0.3,
+                        ease: "power2.out",
+                        delay: i * 0.05
+                    });
+                }
+            });
+            
+            updateLevelIndicator();
+        }
+        
+        // 更新层级指示器
+        function updateLevelIndicator() {
+            document.getElementById('level').textContent = currentLevel;
+        }
+        
+        // 处理鼠标悬停
+        function handleMouseMove(event) {
+            event.preventDefault();
+            
+            if (isAnimating) return;
+            
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // 更新光线投射器
+            raycaster.setFromCamera(mouse, camera);
+            
+            // 检测所有立方体
+            const cubesToCheck = [];
+            cubes.forEach(cube => {
+                if (cube.visible) {
+                    cubesToCheck.push(cube);
+                }
+            });
+            
+            const intersects = raycaster.intersectObjects(cubesToCheck);
+            
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+                const cube = intersect.object;
+                const faceIndex = intersect.face.materialIndex;
+                
+                if (hoveredFace !== cube || (hoveredFace && hoveredFace.hoveredFaceIndex !== faceIndex)) {
+                    // 重置之前悬停的面
+                    if (hoveredFace) {
+                        resetHoverEffect();
+                    }
+                    
+                    // 应用悬停效果
+                    applyHoverEffect(cube, faceIndex);
+                    hoveredFace = cube;
+                    hoveredFace.hoveredFaceIndex = faceIndex;
+                    
+                    // 显示照片信息
+                    showPhotoInfo(cube.material[faceIndex].userData, currentLevel);
+                }
+            } else {
+                // 鼠标移出
+                if (hoveredFace) {
+                    resetHoverEffect();
+                    hoveredFace = null;
+                    hidePhotoInfo();
+                }
+            }
+        }
+        
+        // 应用悬停效果
+        function applyHoverEffect(cube, faceIndex) {
+            if (!cube.cubeData.faces[faceIndex].hovered) {
+                cube.cubeData.faces[faceIndex].hovered = true;
+                
+                // 保存原始材质
+                cube.cubeData.faces[faceIndex].originalOpacity = cube.material[faceIndex].opacity;
+                cube.cubeData.faces[faceIndex].originalEmissive = cube.material[faceIndex].emissive
+                    ? cube.material[faceIndex].emissive.clone()
+                    : new THREE.Color(0x000000);
+                
+                // 应用悬停效果
+                gsap.to(cube.material[faceIndex], {
+                    emissive: new THREE.Color(0x333333),
+                    opacity: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+                
+                // 轻微放大效果
+                const scale = 1.05;
+                const originalScale = cube.scale.clone();
+                cube.userData.hoverTween = gsap.to(cube.scale, {
+                    x: originalScale.x * scale,
+                    y: originalScale.y * scale,
+                    z: originalScale.z * scale,
+                    duration: 0.4,
+                    ease: "elastic.out(1, 0.5)"
+                });
+            }
+        }
+        
+        // 重置悬停效果
+        function resetHoverEffect() {
+            if (hoveredFace && hoveredFace.hoveredFaceIndex !== undefined) {
+                const faceIndex = hoveredFace.hoveredFaceIndex;
+                const faceData = hoveredFace.cubeData.faces[faceIndex];
+                
+                if (faceData && faceData.hovered) {
+                    faceData.hovered = false;
+                    
+                    gsap.to(hoveredFace.material[faceIndex], {
+                        emissive: faceData.originalEmissive || new THREE.Color(0x000000),
+                        opacity: faceData.originalOpacity || 1,
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                    
+                    // 恢复原始大小
+                    if (hoveredFace.userData.hoverTween) {
+                        hoveredFace.userData.hoverTween.kill();
+                    }
+                    
+                    gsap.to(hoveredFace.scale, {
+                        x: 1,
+                        y: 1,
+                        z: 1,
+                        duration: 0.4,
+                        ease: "elastic.out(1, 0.5)"
+                    });
+                }
+            }
+        }
+        
+        // 显示照片信息
+        function showPhotoInfo(photoData, level) {
+            const infoEl = document.getElementById('photo-info');
+            if (photoData) {
+                document.getElementById('photo-name').textContent = photoData.name || '-';
+                document.getElementById('photo-size').textContent = photoData.size || '-';
+                document.getElementById('photo-type').textContent = photoData.type || '-';
+                document.getElementById('photo-level').textContent = level;
+                infoEl.style.display = 'block';
+            }
+        }
+        
+        // 隐藏照片信息
+        function hidePhotoInfo() {
+            document.getElementById('photo-info').style.display = 'none';
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 文件选择
+            document.getElementById('file-input').addEventListener('change', handleFileSelect);
+            
+            // 鼠标事件
+            const container = document.getElementById('container');
+            
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            container.addEventListener('mousedown', (event) => {
+                if (event.button === 0) { // 左键
+                    isDragging = true;
+                    previousMousePosition = { x: event.clientX, y: event.clientY };
+                }
+            });
+            
+            container.addEventListener('mousemove', (event) => {
+                handleMouseMove(event);
+                
+                if (isDragging && currentCube) {
+                    const deltaX = event.clientX - previousMousePosition.x;
+                    const deltaY = event.clientY - previousMousePosition.y;
+                    
+                    if (currentCube.userData.group) {
+                        currentCube.userData.group.rotation.y += deltaX * 0.01;
+                        currentCube.userData.group.rotation.x += deltaY * 0.01;
+                    }
+                    
+                    previousMousePosition = { x: event.clientX, y: event.clientY };
+                }
+            });
+            
+            container.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            container.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                if (currentCube) {
+                    camera.position.z += event.deltaY * 0.01;
+                    camera.position.z = Math.max(3, Math.min(20, camera.position.z));
+                }
+            });
+            
+            container.addEventListener('click', (event) => {
+                if (event.button === 0 && !isDragging && currentCube && !isAnimating) { // 左键点击
+                    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                    
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObject(currentCube);
+                    
+                    if (intersects.length > 0) {
+                        expandCube(currentCube);
+                    }
+                }
+            });
+            
+            container.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                if (currentCube && currentCube.cubeData.isExpanded && !isAnimating) {
+                    // 找到父立方体
+                    let parentCube = null;
+                    for (const cube of cubes) {
+                        if (cube.cubeData.isExpanded && cube !== currentCube) {
+                            parentCube = cube;
+                            break;
+                        }
+                    }
+                    if (parentCube) {
+                        restoreCube(parentCube);
+                    }
+                }
+            });
+            
+            // 键盘事件
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    // 重置到第一层
+                    if (currentLevel > 1) {
+                        let rootCube = cubes.find(cube => cube.cubeData.isRoot);
+                        if (rootCube) {
+                            // 恢复所有展开的立方体
+                            while (currentLevel > 1) {
+                                const expandedCube = cubes.find(cube => cube.cubeData.isExpanded);
+                                if (expandedCube) {
+                                    restoreCube(expandedCube);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 轻微自动旋转
+            if (currentCube && currentCube.userData.group && !isAnimating) {
+                currentCube.userData.group.rotation.y += 0.001;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // 初始化应用
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
