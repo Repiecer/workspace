@@ -1,8 +1,0 @@
-print(round(1.5))
-print(round(2.5))
-print(1.5//1)
-print(2.5//1)
-print(int(1.5+0.5))
-f = lambda x: int(x+0.5)
-print(f(1.5))
-print(f(2.5))
