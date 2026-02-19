@@ -1,66 +1,49 @@
 import requests
-import urllib.parse
-import json
 
-# 请求配置
+# 目标请求URL
 url = "https://xsxk.nuist.edu.cn/xsxk/elective/clazz/add"
 
-# 请求头
-headers = {
-    'accept': 'application/json, text/plain, */*',
-    'accept-encoding': 'gzip, deflate, br, zstd',
-    'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-    'authorization': 'eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY2OTgwNTgxNDU0LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoicjBjbW0wZHExZWhwNnFtcmdvNGg4ajBsYTAifQ.R5AyilXTIsHQLPfYZs77U4U8Hu987NioGrbS0jb0oUx0M3qDF5atkLQKbx9icXYTGqJfFjZfDum8p4l7nlPBoQ',
-    'batchid': 'e49350a1926a4bfb95cf24eb361411c3',
-    'content-type': 'application/x-www-form-urlencoded',
-    'cookie': 'route=e8621a4a430d4c44ae231be5b47e4a48; Authorization=eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY2OTgwNTgxNDU0LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoicjBjbW0wZHExZWhwNnFtcmdvNGg4ajBsYTAifQ.R5AyilXTIsHQLPfYZs77U4U8Hu987NioGrbS0jb0oUx0M3qDF5atkLQKbx9icXYTGqJfFjZfDum8p4l7nlPBoQ',
-    'origin': 'https://xsxk.nuist.edu.cn',
-    'priority': 'u=1, i',
-    'referer': 'https://xsxk.nuist.edu.cn/xsxk/elective/grablessons?batchId=e49350a1926a4bfb95cf24eb361411c3',
-    'sec-ch-ua': '"Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Linux"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+# 注意：这里有两个Cookie项，通常只需关注关键的 'Authorization'
+cookies = {
+    'route': '9b588388c72efc64461890c4edb3d800',
+    'Authorization': 'eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY4NDY5NzE1NTk4LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoiMTExODJodGc2NGppZHJldHYybmlnY29iMTcifQ.efLQB8hzPyFGWvhmdUPcY_mBBVoAwpo_bQpggrB_oDcOSetjcQqwQOk_tGoH-tB9H6eF8vazeYVbYLrPqLRhNQ',
 }
 
-# 请求体数据（从你提供的负载解析）
+# 请求头部信息，其中的Cookie通常无需重复设置，requests库的cookies参数会处理
+headers = {
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Encoding': 'gzip, deflate, br',  # requests自动处理解码，可省略此行
+    'Accept-Language': 'zh-CN,zh;q=0.9',
+    'Authorization': 'eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY4NDY5NzE1NTk4LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoiMTExODJodGc2NGppZHJldHYybmlnY29iMTcifQ.efLQB8hzPyFGWvhmdUPcY_mBBVoAwpo_bQpggrB_oDcOSetjcQqwQOk_tGoH-tB9H6eF8vazeYVbYLrPqLRhNQ',
+    'Batchid': '41467e8812f44bd3840c3d7e2b1a14b1',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Origin': 'https://xsxk.nuist.edu.cn',
+    'Priority': 'u=1, i',
+    'Referer': 'https://xsxk.nuist.edu.cn/xsxk/elective/grablessons?batchId=41467e8812f44bd3840c3d7e2b1a14b1',
+    'Sec-Ch-Ua': '"Chromium";v="143", "Not A(Brand";v="24"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Linux"',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+}
+
+# POST请求的表单数据
 data = {
     'clazzType': 'FANKC',
-    'clazzId': '2025202621300051504',
-    'secretVal': 'gvQAbZNbV7WUcNlo2NuGHjRh1xL6it12PcEDhIKIT98VtYv/C4GCVAMRHP4p6JY7N+LoCHCDvgk+TwP7XriXtRFAmN9sxVOkSqUBfbZ5cZANkJ1lo+IiEVQpHQN2zFK/FBlB6jLF1+dTEzuN8Eg6zQnDwCmejXIXgBeYHExT9R/s='
+    'clazzId': '2025202621200002504',
+    'secretVal': '8CVjSrx5S/6NjcYOtoqrOLA4zDKKSl30ZxMQ5fTRLP8VtYv/C4GCVAMRHP4p6JY7N+LoCHCDvgk+TwP7XriXtXph4zW03Z2BvsbbvA7y/nhv/IZUauCRg0Jya0+WAQMGQA+FeAOHml3nYY2FsIC4Xp6pXiyhnGDvwP7wilMDNoQ=',
 }
 
-# 注意：URL编码中的 %2B 是加号(+)的编码，%2F 是斜杠(/)的编码
-# Python的requests会自动处理编码，所以可以直接使用解码后的值
-
 # 发送POST请求
-try:
-    response = requests.post(url, headers=headers, data=data)
-    
-    print("=" * 60)
-    print(f"状态码: {response.status_code}")
-    print(f"响应头: {dict(response.headers)}")
-    
-    # 尝试解析JSON响应
-    try:
-        result = response.json()
-        print(f"JSON响应: {json.dumps(result, ensure_ascii=False, indent=2)}")
-        
-        # 常见的响应字段解析
-        if 'code' in result:
-            print(f"\n返回代码: {result['code']}")
-        if 'message' in result:
-            print(f"返回消息: {result['message']}")
-        if 'data' in result:
-            print(f"返回数据: {result['data']}")
-            
-    except json.JSONDecodeError:
-        print(f"文本响应: {response.text[:500]}...")  # 只显示前500字符
-    
-    print("=" * 60)
-    
-except requests.exceptions.RequestException as e:
-    print(f"请求失败: {e}")
+response = requests.post(url, headers=headers, data=data)
+
+# 打印响应状态码和内容
+print(f"状态码: {response.status_code}")
+print("响应内容:")
+print(response.text)
+
+# 如果响应是JSON格式，也可以使用 response.json() 来解析
+result = response.json()
+print(result)

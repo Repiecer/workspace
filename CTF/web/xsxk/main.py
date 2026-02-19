@@ -4,11 +4,11 @@ from http.cookies import SimpleCookie
 url = 'https://xsxk.nuist.edu.cn/xsxk/elective/clazz/add'
 data = {
     'clazzType': 'FANKC',
-    'clazzId': '2025202621300051504',
-    'secretVal': 'gvQAbZNbV7WUcNlo2NuGHjRh1xL6it12PcEDhIKIT98VtYv%2FC4GCVAMRHP4p6JY7N%2BLoCHCDvgk%2BTwP7XriXtZ%2BQpqeJB4YsxNFyoLbn%2B6ENkJ1lo%2BIiEVQpHQN2zFK%2FBlB6jLF1%2BdTEzuN8Eg6zQnDwCmejXIXgBeYHExT9R%2Fs%3D'
+    'clazzId': '2025202621200002504',
+    'secretVal': f'g8CVjSrx5S%2F6NjcYOtoqrOLA4zDKKSl30ZxMQ5fTRLP8VtYv%2FC4GCVAMRHP4p6JY7N%2BLoCHCDvgk%2BTwP7XriXtXph4zW03Z2BvsbbvA7y%2Fnhv%2FIZUauCRg0Jya0%2BWAQMGQA%2BFeAOHml3nYY2FsIC4Xp6pXiyhnGDvwP7wilMDNoQ%3D'
 }
 
-cookies_str = 'route=e8621a4a430d4c44ae231be5b47e4a48; Authorization=eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY2OTgwNTgxNDU0LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoicjBjbW0wZHExZWhwNnFtcmdvNGg4ajBsYTAifQ.R5AyilXTIsHQLPfYZs77U4U8Hu987NioGrbS0jb0oUx0M3qDF5atkLQKbx9icXYTGqJfFjZfDum8p4l7nlPBoQ'
+cookies_str = 'route=9b588388c72efc64461890c4edb3d800; Authorization=eyJhbGciOiJIUzUxMiJ9.eyJ0aW1lIjoxNzY4NDY5NzE1NTk4LCJsb2dpbl91c2VyX2tleSI6IjIwMjU4MzMwMDUyMCIsInRva2VuIjoiMTExODJodGc2NGppZHJldHYybmlnY29iMTcifQ.efLQB8hzPyFGWvhmdUPcY_mBBVoAwpo_bQpggrB_oDcOSetjcQqwQOk_tGoH-tB9H6eF8vazeYVbYLrPqLRhNQ'
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0',

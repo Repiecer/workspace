@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>污染物排放数据分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9fc;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 800px;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+        
+        .main-content {
+            flex: 3;
+            min-width: 300px;
+        }
+        
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eaeaea;
+            font-size: 20px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        select, button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        select:focus, button:focus {
+            outline: none;
+            border-color: #4a6491;
+            box-shadow: 0 0 0 2px rgba(74, 100, 145, 0.2);
+        }
+        
+        button {
+            background-color: #4a6491;
+            color: white;
+            border: none;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            background-color: #3a5379;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .highlight-card {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-left: 5px solid #4a6491;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-top: 4px solid #4a6491;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .improvement {
+            color: #2e7d32;
+        }
+        
+        .regression {
+            color: #c62828;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .pollutant-list {
+            list-style-type: none;
+        }
+        
+        .pollutant-list li {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #4a6491;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pollutant-list li:hover {
+            background-color: #eef2f7;
+            transform: translateX(5px);
+        }
+        
+        .pollutant-list li.active {
+            background-color: #e3f2fd;
+            border-left-color: #2196f3;
+            font-weight: 600;
+        }
+        
+        .time-range {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .data-source {
+            font-size: 12px;
+            color: #888;
+            margin-top: 30px;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .btn-group button {
+                min-width: 100px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="content-wrapper">
+            <div class="main-content">
+                <div class="card">
+                    <h2>污染物排放趋势图</h2>
+                    <div class="controls">
+                        <select id="pollutantSelect">
+                            <option value="COD">化学需氧量 (COD)</option>
+                            <option value="氨氮">氨氮</option>
+                            <option value="六价铬">六价铬</option>
+                            <option value="石油类">石油类</option>
+                            <option value="悬浮物">悬浮物</option>
+                            <option value="氟化物">氟化物</option>
+                            <option value="铅">铅</option>
+                            <option value="镍">镍</option>
+                            <option value="铬">铬</option>
+                            <option value="BOD5">五日生化需氧量 (BOD5)</option>
+                            <option value="总氮">总氮</option>
+                            <option value="总磷">总磷</option>
+                            <option value="颗粒物">颗粒物</option>
+                            <option value="NOX">氮氧化物 (NOX)</option>
+                            <option value="SO2">二氧化硫 (SO2)</option>
+                            <option value="VOC">挥发性有机物 (VOC)</option>
+                            <option value="氯化氢">氯化氢</option>
+                        </select>
+                        
+                        <div class="btn-group">
+                            <button id="viewTrend">趋势图</button>
+                            <button id="viewMonthly">月对比</button>
+                            <button id="viewYearly">年对比</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="pollutantChart"></canvas>
+                    </div>
+                    
+                    <div class="time-range">
+                        <span>数据时间范围: 2023年1月 - 2025年12月</span>
+                        <span id="currentPollutant">当前显示: 化学需氧量 (COD)</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>多污染物对比分析</h2>
+                    <div class="controls">
+                        <select id="yearSelect">
+                            <option value="2023">2023年</option>
+                            <option value="2024">2024年</option>
+                            <option value="2025" selected>2025年</option>
+                        </select>
+                        
+                        <select id="monthSelect">
+                            <option value="all">全年平均</option>
+                            <option value="1">1月</option>
+                            <option value="2">2月</option>
+                            <option value="3">3月</option>
+                            <option value="4">4月</option>
+                            <option value="5">5月</option>
+                            <option value="6">6月</option>
+                            <option value="7">7月</option>
+                            <option value="8">8月</option>
+                            <option value="9">9月</option>
+                            <option value="10">10月</option>
+                            <option value="11">11月</option>
+                            <option value="12">12月</option>
+                        </select>
+                        
+                        <button id="comparePollutants">更新对比图</button>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>污染物数据表</h2>
+                    <div class="controls">
+                        <select id="tablePollutantSelect">
+                            <option value="all">所有污染物</option>
+                            <option value="COD">化学需氧量 (COD)</option>
+                            <option value="氨氮">氨氮</option>
+                            <option value="六价铬">六价铬</option>
+                            <option value="石油类">石油类</option>
+                            <option value="悬浮物">悬浮物</option>
+                        </select>
+                        
+                        <select id="tableYearSelect">
+                            <option value="all">所有年份</option>
+                            <option value="2023">2023年</option>
+                            <option value="2024">2024年</option>
+                            <option value="2025">2025年</option>
+                        </select>
+                        
+                        <button id="updateTable">更新表格</button>
+                    </div>
+                    
+                    <div id="tableContainer" style="overflow-x: auto; max-height: 400px;">
+                        <table id="pollutantTable">
+                            <thead>
+                                <tr>
+                                    <th>污染物</th>
+                                    <th>2023年1月</th>
+                                    <th>2023年2月</th>
+                                    <th>2023年3月</th>
+                                    <th>2023年4月</th>
+                                    <th>2023年5月</th>
+                                    <th>2023年6月</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- 表格数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="card highlight-card">
+                    <h2>绿色工厂绩效提升</h2>
+                    <p>自2019年7月获批工业和信息化部第四批绿色工厂以来，通过技术改造和环保投入，主要绩效指标显著提升：</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value improvement">-17.7%</div>
+                            <div class="stat-label">单位产品碳排放量</div>
+                            <div>2.60 → 2.14 tCO₂/t</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value improvement">-66.1%</div>
+                            <div class="stat-label">氮氧化物排放量</div>
+                            <div>3.776 → 1.282 t</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value improvement">-89.1%</div>
+                            <div class="stat-label">二氧化硫排放量</div>
+                            <div>1.18 → 0.129 t</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value improvement">+45.0%</div>
+                            <div class="stat-label">单位用地面积产值</div>
+                            <div>0.213 → 0.310 万元/㎡</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>污染物列表</h2>
+                    <ul class="pollutant-list" id="pollutantList">
+                        <!-- 污染物列表将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h2>主要减排措施</h2>
+                    <p><strong>1. 锅炉低氮改造</strong>：投资45.9万元进行燃气锅炉超低氮改造，氮氧化物减排0.554吨。</p>
+                    <p><strong>2. 焙烧炉烟尘治理</strong>：投资55.6万元，采用电捕和水喷淋工艺，氮氧化物减排0.2553吨。</p>
+                    <p><strong>3. 淘汰落后设备</strong>：淘汰人工点火焙烧炉，单位产品碳排放量减少0.46tCO₂/t。</p>
+                    <p><strong>4. 节能技术改造</strong>：投资22.66万元采购永磁变频空压机，年节约用电22.4万Kwh。</p>
+                    <p><strong>5. 节水管理</strong>：投资0.5万元整改供水管路，节约新鲜水9523吨。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-source">
+            数据来源：ALLINONE.xlsx 污染物排放数据及绿色工厂绩效指标 | 更新日期: 2025年12月
+        </div>
+    </div>
+
+    <script>
+        // 污染物数据从Excel中提取
+        const pollutantData = {
+            "COD": [0.178524, 0.176088, 0.165648, 0.08928, 0.085376, 0.07936, 0.051597, 0.051597, 0.042588, 0.094875, 0.1044, 0.0819, 0.808128, 0.46848, 0.580232, 0.231504, 0.2491, 0.219632, 0.056115, 0.06048, 0.05832, 0.034344, 0.03888, 0.03888, 0.17808, 0.1696, 0.530848, 0.0672, 0.05616, 0.0504, 0.02156, 0.025984, 0.01722, 0.051842, 0.060536, 0.063112],
+            "氨氮": [0.00320112, 0.00315744, 0.00297024, 0.0028458, 0.00272136, 0.0025296, 0.00492156, 0.00492156, 0.00406224, 0.0079948, 0.00879744, 0.00690144, 0.0258336, 0.014976, 0.0185484, 0.0260988, 0.0280825, 0.0247604, 0.0172086, 0.0185472, 0.0178848, 0.000316251, 0.00035802, 0.00035802, 0.0090552, 0.008624, 0.02699312, 0.0028392, 0.00237276, 0.0021294, 0.000462, 0.0005568, 0.000369, 0.00242305, 0.0028294, 0.0029498],
+            "六价铬": [0.000104652, 0.000103224, 9.7104e-05, 0.0005301, 0.00050692, 0.0004712, 0.000113778, 0.000113778, 9.3912e-05, 0.000191015, 0.000210192, 0.000164892, 0.000647496, 0.00037536, 0.000464899, 5.5692e-05, 5.9925e-05, 5.2836e-05, 5.3621e-05, 5.7792e-05, 5.5728e-05, 1.0017e-05, 1.134e-05, 1.134e-05, 2.856e-05, 2.72e-05, 8.5136e-05, 1.344e-05, 1.1232e-05, 1.008e-05, 6.314e-05, 7.6096e-05, 5.043e-05, 1.127e-05, 1.316e-05, 1.372e-05],
+            "石油类": [0.00033858, 0.00033396, 0.00031416, 0.00037665, 0.00036018, 0.0003348, 0.00027783, 0.00027783, 0.00022932, 0.00011385, 0.00012528, 9.828e-05, 0.00052992, 0.0003072, 0.00038048, 0.00028392, 0.0003055, 0.00026936, 0.00031175, 0.000336, 0.000324, 0.00045792, 0.0005184, 0.0005184, 0.0002184, 0.000208, 0.00065104, 0.0004368, 0.00036504, 0.0003276, 0.0004928, 0.00059392, 0.0003936, 0.00023667, 0.00027636, 0.00028812],
+            "悬浮物": [0.038475, 0.03795, 0.0357, 0.012555, 0.012006, 0.01116, 0.022491, 0.022491, 0.018564, 0.026565, 0.029232, 0.022932, 0.061272, 0.03552, 0.043993, 0.089544, 0.09635, 0.084952, 0.029928, 0.032256, 0.031104, 0.018603, 0.02106, 0.02106, 0.02688, 0.0256, 0.080128, 0.01008, 0.008424, 0.00756, 0.0231, 0.02784, 0.01845, 0.020286, 0.023688, 0.024696],
+            "氟化物": [0.00590976, 0.00582912, 0.00548352, 0.00177165, 0.00169418, 0.0015748, 0.01251558, 0.01251558, 0.01033032, 0.023276, 0.0256128, 0.0200928, 0.0134136, 0.007776, 0.0096309, 0.020202, 0.0217375, 0.019166, 0.0180815, 0.019488, 0.018792, 0.00148824, 0.0016848, 0.0016848, 0.0043344, 0.004128, 0.01292064, 0.004284, 0.0035802, 0.003213, 0.0006314, 0.00076096, 0.0005043, 0.0037191, 0.0043428, 0.0045276],
+            "铅": [3.8475e-05, 3.795e-05, 3.57e-05, 3.4875e-05, 3.335e-05, 3.1e-05, 3.3075e-05, 3.3075e-05, 2.73e-05, 3.1625e-05, 3.48e-05, 2.73e-05, 4.14e-05, 2.4e-05, 2.9725e-05, 7.098e-05, 7.6375e-05, 6.734e-05, 0.0001247, 0.0001344, 0.0001296, 0.0001431, 0.000162, 0.000162, 0.000168, 0.00016, 0.0005008, 0.000168, 0.0001404, 0.000126, 0.000154, 0.0001856, 0.000123, 0.0001127, 0.0001316, 0.0001372],
+            "镍": [0.00016929, 0.00016698, 0.00015708, 0.0005301, 0.00050692, 0.0004712, 0.00034398, 0.00034398, 0.00028392, 0.0003795, 0.0004176, 0.0003276, 0.00059616, 0.0003456, 0.00042804, 0.00050232, 0.0005405, 0.00047656, 0.00031175, 0.000336, 0.000324, 3.5775e-05, 4.05e-05, 4.05e-05, 0.0002016, 0.000192, 0.00060096, 0.0008904, 0.00074412, 0.0006678, 0.0014322, 0.00172608, 0.0011439, 0.00050715, 0.0005922, 0.0006174],
+            "铬": [0.000344736, 0.000340032, 0.000319872, 0.00098487, 0.000941804, 0.00087544, 0.000206388, 0.000206388, 0.000170352, 0.000441485, 0.000485808, 0.000381108, 0.00203688, 0.0011808, 0.00146247, 0.000186732, 0.000200925, 0.000177156, 0.000167098, 0.000180096, 0.000173664, 4.293e-05, 4.86e-05, 4.86e-05, 0.00012096, 0.0001152, 0.000360576, 3.696e-05, 3.0888e-05, 2.772e-05, 0.00024178, 0.000291392, 0.00019311, 4.3953e-05, 5.1324e-05, 5.3508e-05],
+            "BOD5": [0.0444771, 0.0438702, 0.0412692, 0.02232, 0.021344, 0.01984, 0.0134946, 0.0134946, 0.0111384, 0.023023, 0.0253344, 0.0198744, 0.218592, 0.12672, 0.156948, 0.0495768, 0.053345, 0.0470344, 0.0154628, 0.0166656, 0.0160704, 0.008586, 0.00972, 0.00972, 0.049392, 0.04704, 0.1472352, 0.017304, 0.0144612, 0.012978, 0.005236, 0.0063104, 0.004182, 0.01127, 0.01316, 0.01372],
+            "总氮": [0.0378594, 0.0373428, 0.0351288, 0.0927675, 0.088711, 0.08246, 0.054243, 0.054243, 0.044772, 0.0719785, 0.0792048, 0.0621348, 0.0473616, 0.027456, 0.0340054, 0.0643188, 0.0692075, 0.0610204, 0.072326, 0.077952, 0.075168, 0.0470799, 0.053298, 0.053298, 0.111384, 0.10608, 0.3320304, 0.10416, 0.087048, 0.07812, 0.09548, 0.115072, 0.07626, 0.0509404, 0.0594832, 0.0620144],
+            "总磷": [0.00207765, 0.0020493, 0.0019278, 0.00110205, 0.00105386, 0.0009796, 0.00029106, 0.00029106, 0.00024024, 0.0037697, 0.00414816, 0.00325416, 0.00288144, 0.0016704, 0.00206886, 0.00050232, 0.0005405, 0.00047656, 0.00404028, 0.00435456, 0.00419904, 0.00012879, 0.0001458, 0.0001458, 0.000588, 0.00056, 0.0017528, 5.04e-05, 4.212e-05, 3.78e-05, 0.0001078, 0.00012992, 8.61e-05, 9.016e-05, 0.00010528, 0.00010976],
+            "颗粒物": [0.1349228782, 0.11856008, 0.1350656759, 0.154204035, 0.1501630608, 0.1673125617, 0.1480355453, 0.1333811695, 0.1265426498, 0.1155203662, 0.1496906419, 0.1346627499, 0.0676745438, 0.0461626136, 0.0858823233, 0.0833217186, 0.0734487816, 0.0859419402, 0.0884703572, 0.0873450988, 0.083023043, 0.0849616117, 0.0933549415, 0.0951751618, 0.1561831284, 0.1050529288, 0.1439194856, 0.1507293974, 0.1417367643, 0.1462582593, 0.144810441, 0.1486615604, 0.1502226496, 0.1201999741, 0.1479860059, 0.1458914456],
+            "NOX": [0.220388672, 0.182078944, 0.20741797, 0.196239488, 0.2662830928, 0.2903691697, 0.183450176, 0.17948448, 0.1771736, 0.146970824, 0.1902215935, 0.21773688, 0.0364278775, 0.024173853, 0.03338355, 0.010977364, 0.0131656415, 0.0149558355, 0.012877186, 0.02232924, 0.0126999225, 0.011845467, 0.016262268, 0.025051896, 0.038232808, 0.032595632, 0.04162168400000001, 0.032938216, 0.031309104, 0.032483728, 0.033245776, 0.03271528, 0.033032248, 0.026685224, 0.037925288, 0.043401808],
+            "SO2": [0.007326656, 0.00632916, 0.0052877385, 0.00521304, 0.00479544, 0.005133048, 0.004600176, 0.00422688, 0.00409356, 0.00358971, 0.007681768, 0.007050312, 0.0028424625, 0.001908303, 0.003454761, 0.003205572, 0.0026927295, 0.0032494875, 0.003430194, 0.00332268, 0.0030541425, 0.003312756, 0.003611328, 0.004041321, 0.008962956, 0.005975304, 0.008287038, 0.008478792, 0.007832304, 0.008132592, 0.00831624, 0.008249232, 0.008570616, 0.006677064, 0.008631624, 0.00887964],
+            "VOC": [0.1114340096, 0.0999605224, 0.1040493924, 0.139692504, 0.129369648, 0.1377866706, 0.1235141124, 0.1123559094, 0.1084629654, 0.095610262, 0.1262368185, 0.1109277117, 0.00220136073, 0.00144003189, 0.00273991072, 0.00270075924, 0.00239784111, 0.00270427248, 0.00271793508, 0.00284715806, 0.00251325714, 0.0027688551, 0.00290192394, 0.00261765648, 0.009465414660000001, 0.00631027644, 0.00880279956, 0.00941049735, 0.00870839793, 0.00903970548, 0.00919764276, 0.00921307575, 0.00948946599, 0.00742265205, 0.00923712708, 0.0092766114],
+            "氟化物": [0.01476353808, 0.01221810048, 0.01425445056, 0.01578171312, 0.0152726256, 0.01578171312, 0.01425445056, 0.01425445056, 0.01425445056, 0.00975141504, 0.01164323277, 0.01174118112, 0.00933407928, 0.00554830515, 0.01079771058, 0.01021492068, 0.00944888184, 0.00964393188, 0.0111, 0.0111, 0.0102054798, 0.01078236915, 0.0111, 0.0115, 0.00345878272, 0.00375972864, 0.00446881664, 0.00434925568, 0.00416787072, 0.00434925568, 0.0111, 0.0111, 0.00436162048, 0.00360307328, 0.0111, 0.0115],
+            "氯化氢": [0.0150498864, 0.0124550784, 0.0145309248, 0.0160878096, 0.015568848, 0.0160878096, 0.0145309248, 0.0145309248, 0.0145309248, 0.0124550784, 0.0145309248, 0.0140119632, 0.010426752, 0.006190884, 0.012164544, 0.011512872, 0.010643976, 0.0108612, 0.012598992, 0.012598992, 0.011512872, 0.012164544, 0.012598992, 0.01303344, 0.0084519424, 0.009220300800000001, 0.0111411968, 0.0107570176, 0.0103728384, 0.0107570176, 0.011045152, 0.0107570176, 0.0107570176, 0.0088361216, 0.0107570176, 0.011525376]
+        };
+        
+        // 污染物名称映射
+        const pollutantNames = {
+            "COD": "化学需氧量 (COD)",
+            "氨氮": "氨氮",
+            "六价铬": "六价铬",
+            "石油类": "石油类",
+            "悬浮物": "悬浮物",
+            "氟化物": "氟化物",
+            "铅": "铅",
+            "镍": "镍",
+            "铬": "铬",
+            "BOD5": "五日生化需氧量 (BOD5)",
+            "总氮": "总氮",
+            "总磷": "总磷",
+            "颗粒物": "颗粒物",
+            "NOX": "氮氧化物 (NOX)",
+            "SO2": "二氧化硫 (SO2)",
+            "VOC": "挥发性有机物 (VOC)",
+            "氯化氢": "氯化氢"
+        };
+        
+        // 生成月份标签 (2023年1月到2025年12月)
+        const monthLabels = [];
+        const years = [2023, 2024, 2025];
+        years.forEach(year => {
+            for (let month = 1; month <= 12; month++) {
+                monthLabels.push(`${year}年${month}月`);
+            }
+        });
+        
+        // 初始化图表
+        let pollutantChart, comparisonChart;
+        let currentChartType = 'trend';
+        let currentPollutant = 'COD';
+        
+        // 初始化污染物列表
+        function initPollutantList() {
+            const pollutantList = document.getElementById('pollutantList');
+            pollutantList.innerHTML = '';
+            
+            Object.keys(pollutantNames).forEach(pollutant => {
+                const li = document.createElement('li');
+                li.textContent = pollutantNames[pollutant];
+                li.dataset.pollutant = pollutant;
+                
+                if (pollutant === currentPollutant) {
+                    li.classList.add('active');
+                }
+                
+                li.addEventListener('click', function() {
+                    // 移除所有active类
+                    document.querySelectorAll('#pollutantList li').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // 添加当前active类
+                    this.classList.add('active');
+                    
+                    // 更新当前污染物
+                    currentPollutant = this.dataset.pollutant;
+                    document.getElementById('pollutantSelect').value = currentPollutant;
+                    document.getElementById('currentPollutant').textContent = `当前显示: ${pollutantNames[currentPollutant]}`;
+                    
+                    // 更新图表
+                    updatePollutantChart();
+                });
+                
+                pollutantList.appendChild(li);
+            });
+        }
+        
+        // 初始化数据表格
+        function initDataTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            // 默认显示前6个月的数据
+            const monthsToShow = 6;
+            
+            Object.keys(pollutantData).slice(0, 10).forEach(pollutant => {
+                const row = document.createElement('tr');
+                
+                // 污染物名称单元格
+                const nameCell = document.createElement('td');
+                nameCell.textContent = pollutantNames[pollutant] || pollutant;
+                row.appendChild(nameCell);
+                
+                // 数据单元格 (前6个月)
+                for (let i = 0; i < monthsToShow; i++) {
+                    const dataCell = document.createElement('td');
+                    dataCell.textContent = pollutantData[pollutant][i].toExponential(2);
+                    row.appendChild(dataCell);
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 更新数据表格
+        function updateDataTable() {
+            const pollutant = document.getElementById('tablePollutantSelect').value;
+            const year = document.getElementById('tableYearSelect').value;
+            const tableBody = document.getElementById('tableBody');
+            
+            tableBody.innerHTML = '';
+            
+            // 确定要显示的污染物
+            const pollutantsToShow = pollutant === 'all' ? Object.keys(pollutantData) : [pollutant];
+            
+            // 确定要显示的月份范围
+            let startIndex = 0;
+            let endIndex = 36; // 默认显示所有月份
+            
+            if (year !== 'all') {
+                const yearIndex = parseInt(year) - 2023;
+                startIndex = yearIndex * 12;
+                endIndex = startIndex + 12;
+            }
+            
+            // 创建表头
+            const headerRow = document.createElement('tr');
+            const headerCell = document.createElement('th');
+            headerCell.textContent = '污染物';
+            headerRow.appendChild(headerCell);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const headerCell = document.createElement('th');
+                headerCell.textContent = monthLabels[i];
+                headerRow.appendChild(headerCell);
+            }
+            
+            tableBody.appendChild(headerRow);
+            
+            // 添加数据行
+            pollutantsToShow.forEach(pollutantKey => {
+                const row = document.createElement('tr');
+                
+                // 污染物名称单元格
+                const nameCell = document.createElement('td');
+                nameCell.textContent = pollutantNames[pollutantKey] || pollutantKey;
+                row.appendChild(nameCell);
+                
+                // 数据单元格
+                for (let i = startIndex; i < endIndex; i++) {
+                    const dataCell = document.createElement('td');
+                    const value = pollutantData[pollutantKey][i];
+                    // 根据数值大小选择显示格式
+                    if (value < 0.001) {
+                        dataCell.textContent = value.toExponential(2);
+                    } else {
+                        dataCell.textContent = value.toFixed(6);
+                    }
+                    row.appendChild(dataCell);
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 更新污染物图表
+        function updatePollutantChart() {
+            const data = pollutantData[currentPollutant];
+            const chartType = currentChartType === 'trend' ? 'line' : 'bar';
+            
+            let datasets = [];
+            let labels = [];
+            
+            if (currentChartType === 'yearly') {
+                // 按年对比
+                const years = [2023, 2024, 2025];
+                labels = years.map(year => `${year}年`);
+                
+                years.forEach((year, yearIndex) => {
+                    const startIndex = yearIndex * 12;
+                    const yearData = data.slice(startIndex, startIndex + 12);
+                    const avg = yearData.reduce((sum, val) => sum + val, 0) / yearData.length;
+                    
+                    datasets.push({
+                        label: `${pollutantNames[currentPollutant]} - ${year}年平均`,
+                        data: [avg],
+                        backgroundColor: yearIndex === 0 ? 'rgba(74, 100, 145, 0.7)' : 
+                                     yearIndex === 1 ? 'rgba(52, 152, 219, 0.7)' : 
+                                     'rgba(46, 204, 113, 0.7)',
+                        borderColor: yearIndex === 0 ? 'rgb(74, 100, 145)' : 
+                                    yearIndex === 1 ? 'rgb(52, 152, 219)' : 
+                                    'rgb(46, 204, 113)',
+                        borderWidth: 2
+                    });
+                });
+            } else if (currentChartType === 'monthly') {
+                // 按月对比（显示所有年份的同月数据）
+                labels = Array.from({length: 12}, (_, i) => `${i+1}月`);
+                
+                const years = [2023, 2024, 2025];
+                years.forEach((year, yearIndex) => {
+                    const yearData = [];
+                    for (let month = 0; month < 12; month++) {
+                        const dataIndex = yearIndex * 12 + month;
+                        yearData.push(data[dataIndex]);
+                    }
+                    
+                    datasets.push({
+                        label: `${year}年`,
+                        data: yearData,
+                        backgroundColor: yearIndex === 0 ? 'rgba(74, 100, 145, 0.5)' : 
+                                     yearIndex === 1 ? 'rgba(52, 152, 219, 0.5)' : 
+                                     'rgba(46, 204, 113, 0.5)',
+                        borderColor: yearIndex === 0 ? 'rgb(74, 100, 145)' : 
+                                    yearIndex === 1 ? 'rgb(52, 152, 219)' : 
+                                    'rgb(46, 204, 113)',
+                        borderWidth: 2
+                    });
+                });
+            } else {
+                // 趋势图（默认）
+                labels = monthLabels;
+                datasets = [{
+                    label: pollutantNames[currentPollutant],
+                    data: data,
+                    backgroundColor: 'rgba(74, 100, 145, 0.2)',
+                    borderColor: 'rgb(74, 100, 145)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true
+                }];
+            }
+            
+            if (pollutantChart) {
+                pollutantChart.destroy();
+            }
+            
+            const ctx = document.getElementById('pollutantChart').getContext('2d');
+            pollutantChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    if (value < 0.001) {
+                                        label += value.toExponential(3);
+                                    } else {
+                                        label += value.toFixed(6);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '排放量'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: currentChartType === 'yearly' ? '年份' : 
+                                     currentChartType === 'monthly' ? '月份' : '时间'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest'
+                    }
+                }
+            });
+        }
+        
+        // 更新对比图表
+        function updateComparisonChart() {
+            const year = document.getElementById('yearSelect').value;
+            const month = document.getElementById('monthSelect').value;
+            
+            let labels = [];
+            let dataValues = [];
+            
+            if (month === 'all') {
+                // 全年平均
+                labels = Object.keys(pollutantNames).map(key => pollutantNames[key]);
+                
+                const yearIndex = parseInt(year) - 2023;
+                const startIndex = yearIndex * 12;
+                
+                Object.keys(pollutantData).forEach(pollutant => {
+                    const yearData = pollutantData[pollutant].slice(startIndex, startIndex + 12);
+                    const avg = yearData.reduce((sum, val) => sum + val, 0) / yearData.length;
+                    dataValues.push(avg);
+                });
+            } else {
+                // 特定月份
+                labels = Object.keys(pollutantNames).map(key => pollutantNames[key]);
+                
+                const yearIndex = parseInt(year) - 2023;
+                const monthIndex = parseInt(month) - 1;
+                const dataIndex = yearIndex * 12 + monthIndex;
+                
+                Object.keys(pollutantData).forEach(pollutant => {
+                    dataValues.push(pollutantData[pollutant][dataIndex]);
+                });
+            }
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+            
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: month === 'all' ? `${year}年平均排放量` : `${year}年${month}月排放量`,
+                        data: dataValues,
+                        backgroundColor: labels.map((_, i) => {
+                            const colors = [
+                                'rgba(74, 100, 145, 0.7)',
+                                'rgba(52, 152, 219, 0.7)',
+                                'rgba(46, 204, 113, 0.7)',
+                                'rgba(155, 89, 182, 0.7)',
+                                'rgba(241, 196, 15, 0.7)',
+                                'rgba(230, 126, 34, 0.7)',
+                                'rgba(231, 76, 60, 0.7)',
+                                'rgba(149, 165, 166, 0.7)'
+                            ];
+                            return colors[i % colors.length];
+                        }),
+                        borderColor: labels.map((_, i) => {
+                            const colors = [
+                                'rgb(74, 100, 145)',
+                                'rgb(52, 152, 219)',
+                                'rgb(46, 204, 113)',
+                                'rgb(155, 89, 182)',
+                                'rgb(241, 196, 15)',
+                                'rgb(230, 126, 34)',
+                                'rgb(231, 76, 60)',
+                                'rgb(149, 165, 166)'
+                            ];
+                            return colors[i % colors.length];
+                        }),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    if (value < 0.001) {
+                                        label += value.toExponential(3);
+                                    } else {
+                                        label += value.toFixed(6);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '排放量'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value < 0.001) {
+                                        return value.toExponential(2);
+                                    }
+                                    return value.toFixed(4);
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化污染物列表
+            initPollutantList();
+            
+            // 初始化数据表格
+            initDataTable();
+            
+            // 初始化图表
+            updatePollutantChart();
+            updateComparisonChart();
+            
+            // 污染物选择事件
+            document.getElementById('pollutantSelect').addEventListener('change', function() {
+                currentPollutant = this.value;
+                document.querySelector(`#pollutantList li[data-pollutant="${currentPollutant}"]`).click();
+            });
+            
+            // 图表类型切换事件
+            document.getElementById('viewTrend').addEventListener('click', function() {
+                currentChartType = 'trend';
+                updatePollutantChart();
+                setActiveButton(this);
+            });
+            
+            document.getElementById('viewMonthly').addEventListener('click', function() {
+                currentChartType = 'monthly';
+                updatePollutantChart();
+                setActiveButton(this);
+            });
+            
+            document.getElementById('viewYearly').addEventListener('click', function() {
+                currentChartType = 'yearly';
+                updatePollutantChart();
+                setActiveButton(this);
+            });
+            
+            // 对比图表更新事件
+            document.getElementById('comparePollutants').addEventListener('click', updateComparisonChart);
+            
+            // 数据表格更新事件
+            document.getElementById('updateTable').addEventListener('click', updateDataTable);
+            
+            // 设置活动按钮样式
+            function setActiveButton(button) {
+                document.querySelectorAll('.btn-group button').forEach(btn => {
+                    btn.style.backgroundColor = '#4a6491';
+                });
+                button.style.backgroundColor = '#2c3e50';
+            }
+            
+            // 默认激活趋势图按钮
+            setActiveButton(document.getElementById('viewTrend'));
+        });
+    </script>
+</body>
+</html>
