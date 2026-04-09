@@ -21,4 +21,5 @@ while True:
     t = he.heappop(black)
     if t[1] + k >= n-1:
         break
+    
 print(t[0]+ball[-1])
