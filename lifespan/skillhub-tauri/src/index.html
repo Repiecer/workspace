@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillHub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-top">
+        <h1>🛒 <span class="brand">Skill</span><span class="brand-alt">Hub</span></h1>
+        <span class="subtitle">SkillsMP Desktop Client</span>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search 221k+ skills..." autocomplete="off">
+        <button id="searchBtn">🔍 Search</button>
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="stats-bar" id="statsBar"></div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="trending">🔥 Trending</button>
+      <button class="tab" data-tab="recent">🆕 Recent</button>
+      <button class="tab" data-tab="categories">📂 Categories</button>
+      <button class="tab" data-tab="authors">🏆 Authors</button>
+      <button class="tab" data-tab="installed">📋 Installed</button>
+    </nav>
+
+    <main id="mainContent">
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Loading skills...</span>
+      </div>
+      <div id="results" class="results-grid"></div>
+    </main>
+  </div>
+
+  <!-- Skill Detail Modal -->
+  <div id="detailModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" id="modalClose">&times;</span>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Install Modal -->
+  <div id="installModal" class="modal hidden">
+    <div class="modal-content install-modal">
+      <span class="close" id="installModalClose">&times;</span>
+      <div id="installModalBody"></div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

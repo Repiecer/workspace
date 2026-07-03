@@ -1,0 +1,14 @@
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/thiserror-e899c66ad007b290.d: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/thiserror-6caf314ad840c64a/out/private.rs
+
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/libthiserror-e899c66ad007b290.rlib: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/thiserror-6caf314ad840c64a/out/private.rs
+
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/libthiserror-e899c66ad007b290.rmeta: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/thiserror-6caf314ad840c64a/out/private.rs
+
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/thiserror-6caf314ad840c64a/out/private.rs:
+
+# env-dep:OUT_DIR=/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/thiserror-6caf314ad840c64a/out

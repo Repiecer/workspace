@@ -1,0 +1,14 @@
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/serde-4f19dce55aee7bce.d: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/serde-38f9f6056a54b324/out/private.rs
+
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/libserde-4f19dce55aee7bce.rlib: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/serde-38f9f6056a54b324/out/private.rs
+
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/deps/libserde-4f19dce55aee7bce.rmeta: /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/serde-38f9f6056a54b324/out/private.rs
+
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/repiece/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/serde-38f9f6056a54b324/out/private.rs:
+
+# env-dep:OUT_DIR=/home/repiece/workspace/lifespan/skillhub-tauri/src-tauri/target/release/build/serde-38f9f6056a54b324/out
