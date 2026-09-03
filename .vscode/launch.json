@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/Repiece/workspace/Lanqiao",
-      "program": "/home/Repiece/workspace/Lanqiao/build/Debug/outDebug",
+      "cwd": "/home/repiece/workspace/_cplusplus",
+      "program": "/home/repiece/workspace/_cplusplus/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
